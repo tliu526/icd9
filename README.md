@@ -1,159 +1,94 @@
 # Python library for ICD9 Codes
 
-The library encodes [ICD9
-codes](https://en.wikipedia.org/wiki/International_Statistical_Classification_of_Diseases_and_Related_Health_Problems#ICD-9)
-in their natural hierarchy.  For example, "Cholera due to vibrio cholerae" has
-the ICD9 code `001.0`, and is categorized as a type of Cholera, which in turn
-is a type of Intestinal Infectious Disease.  Specifically, `001.0` has the
-following hierarchy:
+## My edits
+A fork of [sirrice's ICD9 repository](https://github.com/sirrice/icd9).
+The target website in the original repo
+has inconsistent structure and as a result the ICD9 data pulled is incomplete.
+Here I put together a simple scraper using requests and BeautifulSoup that
+targets the icd9data.com website to generate the `code.json` used by the `ICD9`
+class. The structure is consistent and complete for the 2015 ICD9-CM Volume 1
+diagnosis codes.
 
-    001-139     Infectious and Parasitic Diseases
-      001-009   Intestinal Infectious Diseases
-        001     Cholera
-          001.0 Cholera due to vibrio cholerae
+## Description
 
-Assuming that codes closely related in the tree are more related than with
-codes further in the tree, this hierarchy is a way to cluster related codes.
+The library encodes ICD9 codes in their natural hierarchy.  For example,
+Cholera due to vibrio cholerae has the ICD9 code `0010`, and are categorized as
+as type of Cholera, which in turn is a type of Intestinal Infectious Disease.
+Specifically, `001.0` has the following hierarchy:
 
-This library encodes all ICD9 codes and their descriptions into a tree that
-captures these relationships.
+  001-139     Infectious and Parasitic Diseases
+    001-009   Intestinal Infectious Diseases
+      001     Cholera
+        001.0 Cholera due to vibrio cholerae
 
+This library encodes all ICD9 codes into a tree that captures this
+relationship.  
 
 ## Using the library
 
-Include `icd9.py` in your python path.  Then put `codes.json` somewhere
-convenient.  Here's a simple example:
+Include `icd9.py` in your python path.  The following is an example:
 
-```python
+  from icd9 import ICD9
 
-from icd9 import ICD9
+  tree = ICD9('codes.json')
 
-# feel free to replace with your path to the json file
-tree = ICD9('codes.json')
-
-# list of top level codes (e.g., '001-139', ...)
-toplevelnodes = tree.children
-toplevelcodes = [node.code for node in toplevelnodes]
-print '\t'.join(toplevelcodes)
-```
+  # list of top level codes (e.g., '001-139', ...)
+  toplevelnodes = tree.children
+  toplevelcodes = [node.code for node in toplevelnodes]
+  print '\t'.join(toplevelcodes)
 
 
-The hierarchy is encoded in a tree of `Node` objects.  The `ICD9()` constructor
-returns the root `Node`.  `Node` has the following methods:
+The hierarchy is encoded in a tree of `Node` objects.  `Node` has the following methods:
 
-`node.search(code)`
+`search(code)`
 
-```python
-# find all sub-nodes whose codes contain '001'
-tree.search('001')
-```
+  # find all sub-nodes whose codes contain '001'
+  tree.search('001')
 
-`node.find(code)`
+`find(code)`
 
-```python
-# find sub-node with code '001.0'. Returns None if code is not found
-tree.find('001.0')
-```
+  # find sub-node with code '001.0'. Returns None if code is not found
+  tree.find('001.0')
 
 And the following properties:
 
-`node.code`
+`children`
 
-```python
-# get node's ICD9 code
-tree.find('001.1').code
+  # get node's children
+  tree.children
 
-# prints '001'
-tree.find('001.1').parent.code
+  # search for '001.0' in root's first child
+  tree.children[0].search('001.0')
 
-# prints '001'
-tree.find('001').code
-```
+`parent`
 
-`node.description`:
+  # get 001.0 node's parent.  None if node is a root
+  tree.find('001.0').parent
 
-```python
-# get english description of ICD9 code
-# prints: 'Cholera due to vibrio cholerae el tor'
-tree.find('001.1').description
+`parents`
 
-# prints: 'ROOT'
-tree.description
+  # get 001.0 node's parent path from the root.  Root node is the first element
+  tree.find('001.0').parents
 
-# prints: 'Cholera'
-tree.find('001.1').parent.description
+`leaves`
 
-# also prints: 'Cholera'
-tree.find('001').description
-```
+  # get all leaf nodes under root's first child
+  tree.children[0].leaves
 
-`node.descr`: alias for `description`
+`siblings`
 
-`node.children`
+  # get all of 001.0 node's siblings that share the same parent
+  tree.find('001.0').siblings
 
-```python
-# get node's children
-tree.children
+ `description`
 
-# search for '001.0' in root's first child
-tree.children[0].search('001.0')
-```
-
-`node.parent`
-
-```python
-# get 001.0 node's parent.  None if node is a root
-tree.find('001.0').parent
-```
-
-`node.parents`
-
-```python
-# get 001.0 node's parent path from the root.  Root node is the first element
-tree.find('001.0').parents
-```
-
-`node.leaves`
-
-```python
-# get all leaf nodes under root's first child
-tree.children[0].leaves
-```
-
-`node.siblings`
-
-```python
-# get all of 001.0 node's siblings that share the same parent
-tree.find('001.0').siblings
-```
-
-
-## ICD9 Descriptions
-
-This library includes descriptions of each ICD9 code and grouping name.
-
-If you are interested in another list of ICD9 codes and their descriptions,
-[drobhbins](https://github.com/drobbins/ICD9) created a csv file of ICD9 codes
-and their short and long descriptions.
+ # get the text description of the node
+ tree.find('001.0').description
 
 ## Scraper
 
-The `scraper/` directory includes the scraper code used to generate the
-dataset.  `scraper/scraper.py` creates a json file `codes.json` of each ICD9
-code's parent codes and descriptions:
+`icd9_data_scraper.py` creates a json file `codes.json` of each ICD9 code's parent codes:
 
-```python
-[
-  {'code': None},
-  {'code': '001-139', 'descr': 'Infectious and Parasitic Diseases'},
-  {'code': '001-009', 'descr': 'Intestinal Infectious Diseases'},
-  {'code': '001', 'descr': 'Cholera'},
-  {'code':  '001.0', 'descr': 'Cholera due to vibrio cholerae'}
-]
-```
+  [None, "001-139", "001-009", "001", "001.0"]
 
-The last element is the actual code, the preceeding elements are coarser
-groupings of codes.  The first element is a dummy that represents root.
-
-Thanks to [http://icd9cm.chrisendres.com/](http://icd9cm.chrisendres.com),
-where the data was secretly scraped from.
+The last element is the actual code, the preceeding elements are coarser groupings of codes.
