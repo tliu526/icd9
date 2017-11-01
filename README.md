@@ -5,7 +5,7 @@ A fork of [sirrice's ICD9 repository](https://github.com/sirrice/icd9).
 The target website in the original repo
 has inconsistent structure and as a result the ICD9 data pulled is incomplete.
 Here I put together a simple scraper using requests and BeautifulSoup that
-targets the icd9data.com website to generate the `code.json` used by the `ICD9`
+targets the [icd9data.com](http://www.icd9data.com/) website to generate the `code.json` used by the `ICD9`
 class. The structure is consistent and complete for the 2015 ICD9-CM Volume 1
 diagnosis codes.
 
@@ -42,48 +42,64 @@ The hierarchy is encoded in a tree of `Node` objects.  `Node` has the following 
 
 `search(code)`
 
+```python
   # find all sub-nodes whose codes contain '001'
   tree.search('001')
+```
 
 `find(code)`
 
+```python
   # find sub-node with code '001.0'. Returns None if code is not found
   tree.find('001.0')
+```
 
 And the following properties:
 
 `children`
 
+```python
   # get node's children
   tree.children
 
   # search for '001.0' in root's first child
   tree.children[0].search('001.0')
+```
 
 `parent`
 
+```python
   # get 001.0 node's parent.  None if node is a root
   tree.find('001.0').parent
+```
 
 `parents`
 
+```python
   # get 001.0 node's parent path from the root.  Root node is the first element
   tree.find('001.0').parents
+```
 
 `leaves`
 
+```python
   # get all leaf nodes under root's first child
   tree.children[0].leaves
+```
 
 `siblings`
 
+```python
   # get all of 001.0 node's siblings that share the same parent
   tree.find('001.0').siblings
+```
 
  `description`
 
- # get the text description of the node
- tree.find('001.0').description
+```python
+  # get the text description of the node
+  tree.find('001.0').description
+```
 
 ## Scraper
 
